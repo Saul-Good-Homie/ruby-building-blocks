@@ -16,7 +16,6 @@ string_array.each do |word|
   length.times do
   final_array.push(word) 
   word = word[0...-1]
-  
   end
 end
 
@@ -24,10 +23,10 @@ end
 final_array.each {|i| 
 
 if $dictionary.include? i
- final_hash[i] += 1
+final_hash[i] += 1
 end
 }
-return final_hash
+print final_hash
 # return hash with each word and count
 end
 
