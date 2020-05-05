@@ -1,0 +1,26 @@
+---
+:answer: GREATNESS
+:wrong_guess:
+- H
+- M
+- X
+:board:
+- __
+- R
+- E
+- A
+- __
+- __
+- E
+- S
+- S
+:used_letters:
+- E
+- A
+- S
+- H
+- R
+- M
+- X
+:round: 
+:game_status: 0
