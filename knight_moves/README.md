@@ -1,0 +1,3 @@
+Knights Travails Project from [The Odin Project](https://www.theodinproject.com/courses/ruby-programming/lessons/data-structures-and-algorithms)
+
+Created by Saul Belisle [Twitter](https://twitter.com/saul_good_homie): @saul_good_homie
