@@ -55,16 +55,6 @@ class Knight_Moves
         end
     end
 
-=begin
-Hey saul, when you come back to this later. The problem with the return
-is that all the "children" are stored in a single array. Not as 8 individual children.
-
-either A) break them up into 8 individual childrens
-or B) find a way to backwards traverse the array and only show the relevent route. 
-
-
-=end
-
     def find_moves(node, start)
         moves = []
         until node.parent == nil
