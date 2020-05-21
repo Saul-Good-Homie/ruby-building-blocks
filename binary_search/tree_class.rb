@@ -125,7 +125,6 @@ class Binary_Search_Tree
                 block_given? ? yield(node) : result << node.data
                 inorder(node.right, result)
             return result
-            
         end
 
         def postorder(node = @root, result = [])
