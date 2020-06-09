@@ -44,13 +44,11 @@ class Bishop
                 new_move << @position[0] + c
                 new_move << @position[1] + d
                 next if new_move[0] < 1 || new_move[0] > 8 || new_move[1] < 1 || new_move[1] > 8 
-
                 available_moves << new_move
                 c -= 1
                 d -= 1
                 break if game.board[new_move[0]][new_move[1]] != "[   ]"
             end
-
                 e = 1
                 f = -1
                 8.times do
@@ -58,13 +56,11 @@ class Bishop
                     new_move << @position[0] + e
                     new_move << @position[1] + f
                     next if new_move[0] < 1 || new_move[0] > 8 || new_move[1] < 1 || new_move[1] > 8 
-
                     available_moves << new_move
                     e += 1
                     f -= 1
                     break if game.board[new_move[0]][new_move[1]] != "[   ]"
                 end
-
                     g = -1
                     h = 1
                     8.times do
