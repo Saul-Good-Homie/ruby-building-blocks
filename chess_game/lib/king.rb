@@ -28,11 +28,10 @@ class King
             new_move = []
             new_move << move[0] + @position[0]
             new_move << move[1] + @position[1]
+            next if new_move[0] < 1 || new_move[0] > 8 || new_move[1] < 1 || new_move[1] > 8 
             available_moves << new_move
-        }
-        available_moves.filter! do |pos|
-            pos[0] >= 1 && pos[0] <= 8 && pos[1] >= 1 && pos[1] <= 8
-        end    
+        } 
+        return available_moves
     end
 
 

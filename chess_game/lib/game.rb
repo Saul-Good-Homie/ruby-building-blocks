@@ -14,6 +14,8 @@ class Chess
     def initialize
         @board = Array.new(9) {Array.new(9,"[   ]")}
         @players = []
+        @check = false
+        @checkmate = false
     end
 
     def set_up(player_1, player_2)
@@ -61,7 +63,8 @@ class Chess
                         right_bishop = Bishop.new(player)
                             update_board(right_bishop, [1,6])
                                 king = King.new(player)
-                                    update_board(king, [1,4])
+                                    #update_board(king, [1,4])
+                                    update_board(king, [5,4])
                                 queen = Queen.new(player)
                                     update_board(queen, [1,5])
                                 pawn_1 = Pawn.new(player)
@@ -147,7 +150,9 @@ class Chess
             moves.each do |move|
                 if @board[move[0]][move[1]] == "[   ]"
                     possible_moves << convert_array_to_input(move)
-                elsif @board[move[0]][move[1]].team != player.team
+                end
+                next if @board[move[0]][move[1]].class == String
+                if @board[move[0]][move[1]].team != player.team
                     possible_moves << convert_array_to_input(move)
                 end
             end 
@@ -255,8 +260,47 @@ class Chess
         board_tile.join()
     end
 
+
+    def find_king(player, game)
+        @board.each do |row|
+            row.each do |square|
+                next if square.class == String
+                if square.piece == "King" && square.team == player.team
+                    return square
+                end
+            end
+        end
+    end
+
+    def king_in_check(player, game)
+        king = find_king(player, game)
+        #find all possible moves to reach the king
+        @board.each do |row|
+            row.each do |square|
+                next if square.class == String
+                next if square.team == player.team
+                #puts square.class
+                moves = square.possible_moves(player, game)
+                if moves.any?{|x| moves.include?(king.position)}
+                #if square.possible_moves(player, game).include? king.position
+                    puts "*****CHECK!*****"
+                    puts ""
+                    puts "#{player.name}, your #{king.display} is in check from #{square.display}"
+                    @check = true
+                else 
+                    @check = false
+                end
+            end    
+        end
+    end
+
     def take_turn(player, game)
-        piece = self.get_input(player)
+        self.king_in_check(player, game)
+            if @check == true
+                piece = self.find_king(player, game)
+            else
+                piece = self.get_input(player)
+            end
         moves = piece.possible_moves(player, game)
         self.give_movement_options(piece, player, moves)
         self.print_board
