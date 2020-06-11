@@ -1,5 +1,7 @@
-class King
-    attr_accessor :team, :display, :piece, :position, :master
+require_relative 'empty_piece.rb'
+#require_relative 'game.rb'
+
+class King < Empty_Piece
     @@moves = [[1,0],[0,1],[1,1],[1,-1],[-1,-1],[-1,1],[-1,0],[0,-1]]
 
     def initialize(player)
@@ -8,6 +10,7 @@ class King
         @display = set_display(team)
         @master = player.name
         @position = []
+        @move_count = 0
     end
 
     def set_display(team)
@@ -16,10 +19,6 @@ class King
         else
             "[ \u2654 ]"
         end
-    end
-
-    def to_s
-        "#{display}"
     end
 
     def possible_moves(player, game)

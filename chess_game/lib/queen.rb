@@ -1,6 +1,7 @@
-class Queen
+require_relative 'empty_piece.rb'
+#require_relative 'game.rb'
+class Queen < Empty_Piece
     require_relative 'game.rb'
-    attr_accessor :team, :display, :piece, :position, :master
 
     def initialize(player)
         @piece = "Queen"
@@ -8,6 +9,7 @@ class Queen
         @display = set_display(team)
         @master = player.name
         @position = []
+        @move_count = 0
     end
 
     def set_display(team)
@@ -16,10 +18,6 @@ class Queen
         else
             "[ \u2655 ]"
         end
-    end
-    
-    def to_s
-        "#{display}"
     end
 
     def possible_moves(player, game)

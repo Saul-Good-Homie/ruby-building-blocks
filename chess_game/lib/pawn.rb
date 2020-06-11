@@ -1,6 +1,6 @@
-class Pawn
-    attr_accessor :team, :display, :piece, :position, :master, :move_count
-    #@@moves = [1,0]
+require_relative 'empty_piece.rb'
+require_relative 'game.rb'
+class Pawn < Empty_Piece
 
     def initialize(player)
         @piece = "Pawn"
@@ -17,10 +17,6 @@ class Pawn
         else
             "[ \u2659 ]"
         end
-    end
-
-    def to_s
-        "#{display}"
     end
 
     def possible_moves(player, game)
@@ -40,12 +36,19 @@ class Pawn
             new_move = []
             new_move << move[0] + @position[0]
             new_move << move[1] + @position[1]
+                #skip if the move is out of bounds.
+            next if new_move[0] < 1 || new_move[0] > 8 || new_move[1] < 1 || new_move[1] > 8
+                #skip if not within game board boundaries (A-G or 1-9)
+            next if game.board[new_move[0]][new_move[1]].class == String
+                #skip if the move is vertical and the space is NOT empty
+            next if new_move[1] == @position[1] && game.board[new_move[0]][new_move[1]].team != "Neutral"
+                #skip if the move is diagonal and the space IS empty or IS same team
+            next if new_move[1] != @position[1] && game.board[new_move[0]][new_move[1]].team == "Neutral" 
+            next if new_move[1] != @position[1] && game.board[new_move[0]][new_move[1]].team == player.team 
+            
             available_moves << new_move
         }
-        available_moves.filter! do |pos|
-            pos[0] >= 1 && pos[0] <= 8 && pos[1] >= 1 && pos[1] <= 8
-        end    
-        available_moves
+        return available_moves
     end
 
 end

@@ -1,6 +1,5 @@
-class Bishop
-    require_relative 'game.rb'
-    attr_accessor :team, :display, :piece, :position, :master
+require_relative 'empty_piece.rb'
+class Bishop < Empty_Piece
 
     def initialize(player)
         @piece = "Bishop"
@@ -8,6 +7,7 @@ class Bishop
         @display = set_display(team)
         @master = player.name
         @position = []
+        @move_count = 0
     end
 
     def set_display(team)
@@ -16,10 +16,6 @@ class Bishop
         else
             "[ \u2657 ]"
         end
-    end
-
-    def to_s
-        "#{display}"
     end
 
     def possible_moves(player, game)
@@ -72,11 +68,7 @@ class Bishop
                         g -= 1
                         h += 1
                         break if game.board[new_move[0]][new_move[1]] != "[   ]"
-                    end
-                    
-            # available_moves.filter! do |pos|
-            #     pos[0] >= 1 && pos[0] <= 8 && pos[1] >= 1 && pos[1] <= 8
-            # end    
+                    end   
             return available_moves
     end
 

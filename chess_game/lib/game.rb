@@ -6,36 +6,69 @@ require_relative 'rook.rb'
 require_relative 'king.rb'
 require_relative 'queen.rb'
 require_relative 'pawn.rb'
+require_relative 'empty_piece.rb'
 
 class Chess
     attr_accessor :board, :players
 
 
     def initialize
-        @board = Array.new(9) {Array.new(9,"[   ]")}
         @players = []
+        @board = []
         @check = false
         @checkmate = false
     end
+    
+    def create_players
+        # game_manager = Player.new("Admin", "Neutral")
+        # puts "Hello Friend, let's play a game of Chess"
+        # puts ""
+        # puts "What is your name?"
+        # name = gets.chomp
+        # player_1 = Player.new(name, "Black")
+        # puts "Great! #{player_1.name} will be #{player_1.team}"
+        # puts ""
 
-    def set_up(player_1, player_2)
-        players << player_1
-        players << player_2
+        # puts "Now we need an opponent"
+        # puts ""
+        # puts "Who are you playing?"
+        # second_name = gets.chomp
+        # player_2 = Player.new(second_name, "White" )
+        # puts "#{player_2.name} will be #{player_2.team}."
+        # puts ""
+        # puts "Now lets play!"
+        # puts ""
+
+player_1 = Player.new("Saul", "Black")
+player_2 = Player.new("LJ", "White")
+game_manager = Player.new("Admin", "Neutral")
+
+            #add players to array
+            @players << player_1
+            @players << player_2
+            @players << game_manager
     end
 
     def create_board
-        @board[0] = ["[   ]", "[ 1 ]","[ 2 ]","[ 3 ]", "[ 4 ]", "[ 5 ]", "[ 6 ]", "[ 7 ]", "[ 8 ]"]
-        n = 1
-        j = 0
-        alpha = ("A".."H").to_a
-        8.times do
-            @board[n][0] = "[ #{alpha[j]} ]"
-            n += 1
-            j += 1
-        end
-        @board.each do |r|
-            puts r.each { |p| p }.join("")
-        end
+        #create board full of empty pieces
+        @board = Array.new(9) {Array.new(9, Empty_Piece.new(@players[2]))}
+
+        #set top row to numbers
+            i = 1
+            8.times do   
+                @board[0][i] = "[ #{i} ]"
+                i += 1
+            end
+
+        #set first column to Letters
+            n = 1
+            j = 0
+            alpha = ("A".."H").to_a
+            8.times do
+                @board[n][0] = "[ #{alpha[j]} ]"
+                n += 1
+                j += 1
+            end
     end
 
     def print_board
@@ -47,6 +80,12 @@ class Chess
     def update_board(piece, array)
         piece.position = array
         @board[array[0]][array[1]] = piece
+    end
+
+
+    def set_game_pieces
+        set_black_pieces(@players[0])
+        set_white_pieces(@players[1])
     end
 
     def set_black_pieces(player)
@@ -64,7 +103,7 @@ class Chess
                             update_board(right_bishop, [1,6])
                                 king = King.new(player)
                                     #update_board(king, [1,4])
-                                    update_board(king, [5,4])
+                                    update_board(king, [6,6])
                                 queen = Queen.new(player)
                                     update_board(queen, [1,5])
                                 pawn_1 = Pawn.new(player)
@@ -142,18 +181,16 @@ class Chess
     end
 
     def give_movement_options(piece, player, moves)
-        if piece.piece == "Pawn"
-            give_pawn_movement_options(moves, piece, player)
-            return
-        end
             possible_moves = []
             moves.each do |move|
-                if @board[move[0]][move[1]] == "[   ]"
-                    possible_moves << convert_array_to_input(move)
-                end
                 next if @board[move[0]][move[1]].class == String
+                if @board[move[0]][move[1]].team == "Neutral"
+                    possible_moves << convert_array_to_input(move)
+                    next
+                end
                 if @board[move[0]][move[1]].team != player.team
                     possible_moves << convert_array_to_input(move)
+                    next
                 end
             end 
             if possible_moves == []
@@ -169,24 +206,6 @@ class Chess
                                 move_piece(piece, step_three)
     end
 
-    #the Pawn is the only piece on the board who's movement is relative to the board direction. 
-    #So it needs special movement options. 
-    def give_pawn_movement_options(moves, piece, player)
-        possible_moves = []
-        moves.each do |move|
-            if move[1] == piece.position[1] && @board[move[0]][move[1]] == "[   ]"
-                possible_moves << convert_array_to_input(move)
-            elsif move[1] != piece.position[1] && @board[move[0]][move[1]] != "[   ]" && @board[move[0]][move[1]].team != player.team
-                possible_moves << convert_array_to_input(move)
-            end
-        end 
-        puts "You can move #{piece} to one of these new spots #{possible_moves}"
-            step_one = get_new_position(player, piece, possible_moves)
-                step_two = step_one.split(//)
-                    step_three = convert_input_to_array(step_two)
-                        move_piece(piece, step_three)
-    end
-
     def get_new_position(player, piece, possible_moves)
         puts "#{player.name} choose where you want to move your #{piece} by typing like this: 'B2'"
         step_one = gets.chomp.upcase!
@@ -194,16 +213,14 @@ class Chess
                 puts "oops, pick a valid square"
                 step_one = gets.chomp.upcase!
             end
-            puts "Moving #{piece} from #{piece.position} to #{step_one}"
+            puts "Moving #{piece} from #{convert_array_to_input(piece.position)} to #{step_one}"
             step_one
     end
 
     def move_piece(piece, array)
-        @board[piece.position[0]][piece.position[1]] = "[   ]"
+        @board[piece.position[0]][piece.position[1]] = Empty_Piece.new(@players[2])
         piece.position = array
-        if piece.piece == "Pawn"
-            piece.move_count += 1
-        end
+        piece.move_count += 1
         @board[array[0]][array[1]] = piece
     end
 
@@ -265,7 +282,9 @@ class Chess
         @board.each do |row|
             row.each do |square|
                 next if square.class == String
+                next if square.team == "Neutral"
                 if square.piece == "King" && square.team == player.team
+                    puts "The #{player.team} king is at #{square.position}"
                     return square
                 end
             end
@@ -278,23 +297,35 @@ class Chess
         @board.each do |row|
             row.each do |square|
                 next if square.class == String
+                next if square.team == "Neutral"
                 next if square.team == player.team
                 #puts square.class
+                puts "testing #{square}"
+                # puts "possible moves #{square.possible_moves(player, game)}"
+
                 moves = square.possible_moves(player, game)
-                if moves.any?{|x| moves.include?(king.position)}
-                #if square.possible_moves(player, game).include? king.position
-                    puts "*****CHECK!*****"
-                    puts ""
-                    puts "#{player.name}, your #{king.display} is in check from #{square.display}"
-                    @check = true
-                else 
-                    @check = false
+                puts "the available moves are: #{moves}"
+                    possible_moves = []
+                        moves.each do |move|
+                            next if @board[move[0]][move[1]].class == String
+                            next if @board[move[0]][move[1]].team != player.team
+                            possible_moves << moves
+                                puts "the #{square} can move to #{possible_moves}"
+                                        if moves.include?(king.position)
+                                            puts "*****CHECK!*****"
+                                            puts ""
+                                            puts "#{player.name}, your #{king.display} is in check from #{square.display}"
+                                            @check = true
+                                        else 
+                                            @check = false
+                                        end
                 end
             end    
         end
     end
 
     def take_turn(player, game)
+        #self.find_king(player, game)
         self.king_in_check(player, game)
             if @check == true
                 piece = self.find_king(player, game)
