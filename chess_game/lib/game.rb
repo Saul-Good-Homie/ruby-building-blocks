@@ -103,7 +103,7 @@ game_manager = Player.new("Admin", "Neutral")
                             update_board(right_bishop, [1,6])
                                 king = King.new(player)
                                     #update_board(king, [1,4])
-                                    update_board(king, [6,6])
+                                    update_board(king, [5,6])
                                 queen = Queen.new(player)
                                     update_board(queen, [1,5])
                                 pawn_1 = Pawn.new(player)
@@ -284,7 +284,6 @@ game_manager = Player.new("Admin", "Neutral")
                 next if square.class == String
                 next if square.team == "Neutral"
                 if square.piece == "King" && square.team == player.team
-                    puts "The #{player.team} king is at #{square.position}"
                     return square
                 end
             end
@@ -293,6 +292,7 @@ game_manager = Player.new("Admin", "Neutral")
 
     def king_in_check(player, game)
         king = find_king(player, game)
+        #puts "the king is at #{king.position}"
         #find all possible moves to reach the king
         @board.each do |row|
             row.each do |square|
@@ -300,26 +300,22 @@ game_manager = Player.new("Admin", "Neutral")
                 next if square.team == "Neutral"
                 next if square.team == player.team
                 #puts square.class
-                puts "testing #{square}"
+                #puts "testing #{square}"
                 # puts "possible moves #{square.possible_moves(player, game)}"
 
                 moves = square.possible_moves(player, game)
-                puts "the available moves are: #{moves}"
-                    possible_moves = []
-                        moves.each do |move|
-                            next if @board[move[0]][move[1]].class == String
-                            next if @board[move[0]][move[1]].team != player.team
-                            possible_moves << moves
-                                puts "the #{square} can move to #{possible_moves}"
-                                        if moves.include?(king.position)
-                                            puts "*****CHECK!*****"
-                                            puts ""
-                                            puts "#{player.name}, your #{king.display} is in check from #{square.display}"
-                                            @check = true
-                                        else 
-                                            @check = false
-                                        end
-                end
+
+                #moves.each {|x| puts "#{square} can move to #{x}"}
+                #puts "the available moves for #{square} are: #{moves}"
+                #puts "the #{square} can move to #{possible_moves}"
+                    if moves.include?(king.position)
+                        puts "*****CHECK!*****"
+                        puts ""
+                        puts "#{player.name}, your #{king.display} is in check from #{convert_array_to_input(square.position)}"
+                        @check = true
+                    else 
+                        @check = false
+                    end
             end    
         end
     end
@@ -327,22 +323,18 @@ game_manager = Player.new("Admin", "Neutral")
     def take_turn(player, game)
         #self.find_king(player, game)
         self.king_in_check(player, game)
-            if @check == true
-                piece = self.find_king(player, game)
-            else
-                piece = self.get_input(player)
-            end
-        moves = piece.possible_moves(player, game)
-        self.give_movement_options(piece, player, moves)
-        self.print_board
+        piece = self.get_input(player)
+            moves = piece.possible_moves(player, game)
+                self.give_movement_options(piece, player, moves)
+                    self.print_board
     end
 
     def play_game
         10.times{
             self.take_turn(@players[0], self)
-            break if @game_over == true
+            break if @checkmate == true
             self.take_turn(@players[1], self)
-            break if @game_over == true
+            break if @checkmate == true
         }  
     end
 

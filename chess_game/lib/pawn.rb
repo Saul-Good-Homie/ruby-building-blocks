@@ -22,12 +22,12 @@ class Pawn < Empty_Piece
     def possible_moves(player, game)
         if @team == "Black"
             movement = [[1,0],[1,1],[1,-1]]
-                if @move_count == 0
+                if @move_count == 0 && game.board[@position[0]+1][@position[1]].team == "Neutral"
                     movement << [2,0]
                 end
         else
                 movement = [[-1,0],[-1,1],[-1,-1]]
-                if @move_count == 0
+                if @move_count == 0 && game.board[@position[0]-1][@position[1]].team == "Neutral"
                     movement << [-2,0]
                 end
         end
@@ -44,7 +44,7 @@ class Pawn < Empty_Piece
             next if new_move[1] == @position[1] && game.board[new_move[0]][new_move[1]].team != "Neutral"
                 #skip if the move is diagonal and the space IS empty or IS same team
             next if new_move[1] != @position[1] && game.board[new_move[0]][new_move[1]].team == "Neutral" 
-            next if new_move[1] != @position[1] && game.board[new_move[0]][new_move[1]].team == player.team 
+            #next if new_move[1] != @position[1] && game.board[new_move[0]][new_move[1]].team == player.team 
             
             available_moves << new_move
         }

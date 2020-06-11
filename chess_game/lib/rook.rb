@@ -29,7 +29,7 @@ class Rook < Empty_Piece
                 next if new_move[0] < 1 || new_move[0] > 8 || new_move[1] < 1 || new_move[1] > 8 
             available_moves << new_move
             n += 1
-            break if game.board[new_move[0]][new_move[1]] != "[   ]"
+            break if game.board[new_move[0]][new_move[1]].team != "Neutral"
         end
         
             j = 1
@@ -40,7 +40,7 @@ class Rook < Empty_Piece
                 next if new_move[0] < 1 || new_move[0] > 8 || new_move[1] < 1 || new_move[1] > 8 
                 available_moves << new_move
                 j += 1
-                break if game.board[new_move[0]][new_move[1]] != "[   ]"
+                break if game.board[new_move[0]][new_move[1]].team != "Neutral"
             end
 
                 k = -1
@@ -51,7 +51,7 @@ class Rook < Empty_Piece
                     next if new_move[0] < 1 || new_move[0] > 8 || new_move[1] < 1 || new_move[1] > 8 
                     available_moves << new_move
                     k -= 1
-                    break if game.board[new_move[0]][new_move[1]] != "[   ]"
+                    break if game.board[new_move[0]][new_move[1]].team != "Neutral"
                 end
 
                     i = -1
@@ -62,7 +62,7 @@ class Rook < Empty_Piece
                         next if new_move[0] < 1 || new_move[0] > 8 || new_move[1] < 1 || new_move[1] > 8 
                         available_moves << new_move
                         i -= 1
-                        break if game.board[new_move[0]][new_move[1]] != "[   ]"
+                        break if game.board[new_move[0]][new_move[1]].team != "Neutral"
                     end
         return available_moves
     end
