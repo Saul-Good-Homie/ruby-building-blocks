@@ -17,7 +17,10 @@ class Chess
         @board = []
         @check = false
         @checkmate = false
-        @last_move = []
+        @start_position = []
+        @place_holder_class = nil
+        @end_move = []
+        @remove_check = 0
     end
     
     def create_players
@@ -206,8 +209,6 @@ game_manager = Player.new("Admin", "Neutral")
                         step_two = step_one.split(//)
                             step_three = convert_input_to_array(step_two)
                                 move_piece(piece, step_three)
-
-
     end
 
     def get_new_position(player, piece, possible_moves)
@@ -222,18 +223,36 @@ game_manager = Player.new("Admin", "Neutral")
     end
 
     def move_piece(piece, array)
-        @last_move = piece.position
-        @board[piece.position[0]][piece.position[1]] = Empty_Piece.new(@players[2])
-        piece.position = array
-        piece.move_count += 1
-        @board[array[0]][array[1]] = piece
+        @place_holder_class = @board[array[0]][array[1]].class
+        @start_position = piece.position.clone
+            @board[piece.position[0]][piece.position[1]] = Empty_Piece.new(@players[2])
+            piece.position = array
+            piece.move_count += 1
+            @board[array[0]][array[1]] = piece
     end
 
     def undo_move(piece)
-        @board[piece.position[0]][piece.position[1]] = Empty_Piece.new(@players[2])
-        piece.position = @last_move
+        #move the piece back to its original starting point
+        @board[@start_position[0]][@start_position[1]] = piece
+        #replace the spot on the board with the original piece there
+        if @place_holder_class == Empty_Piece
+            x = Empty_Piece.new(@players[2])
+        elsif @place_holder_class != Empty_Piece && piece.team == "Black"
+            x = @place_holder_class.new(@players[1])
+        else
+            x = @place_holder_class.new(@players[0])
+        end
+
+        @board[piece.position[0]][piece.position[1]] = x
+        x.position = piece.position
+
+        #update piece position
+        piece.position = @start_position
         piece.move_count -= 1
-        @board[@last_move[0]][@last_move[1]] = piece
+        #need to copy over current move count
+
+        ### start here SAUL ###
+        
     end
 
     def convert_input_to_array(array)
@@ -325,35 +344,84 @@ game_manager = Player.new("Admin", "Neutral")
 
     def king_still_in_check(player, game)
         king = find_king(player, game)
+        player_pieces = []
         #find all possible moves to reach the king
         @board.each do |row|
             row.each do |square|
                 next if square.class == String
                 next if square.team == "Neutral"
                 next if square.team == player.team
+                player_pieces << square 
+                end
+            end
+                player_pieces.each do |square|
                 moves = square.possible_moves(player, game)
                     if moves.include?(king.position)
                         @check = true
+                        break
                     else 
                         @check = false
                     end
-            end    
+            end
+    end
+
+    def check_mate(player, game)
+        #find all squares on board that are the players pieces
+        player_pieces = []
+        piece_moves = []
+        @board.each do |row|
+            row.each do |square|
+                next if square.class == String
+                next if square.team == "Neutral"
+                next if square.team != player.team
+                player_pieces << square
+            end
         end
+        #simulate every possible move one at a time
+                player_pieces.each do |piece|
+                    possible_moves = []
+                    moves = piece.possible_moves(player, game)
+                    moves.each do |move|
+                            next if @board[move[0]][move[1]].class == String
+                            if @board[move[0]][move[1]].team == "Neutral" || @board[move[0]][move[1]].team != player.team
+                                possible_moves << move
+                                #next
+                            end
+                        end
+
+                    next if possible_moves == []
+                    possible_moves.each do |move|
+                                        move_piece(piece, move)
+                                        king_still_in_check(player, game)
+                                            #puts "Moving #{piece} to #{move}. Is King still in check? #{@check}"
+                                            if @check == false
+                                            @remove_check += 1
+                                            end
+                                        undo_move(piece)
+                                        @check = true
+                    
+            end
+        end
+        puts "There are #{@remove_check} possible moves"
     end
 
 
     def take_turn(player, game)
-        #self.check_mate(player, game)
         self.king_in_check(player, game)
+        if @check == true
+            self.check_mate(player, game)
+        end
         piece = self.get_input(player)
         moves = piece.possible_moves(player, game)
         self.give_movement_options(piece, player, moves)
-            self.king_still_in_check(player, game)
             if @check == true
-                puts "Sorry, you need to make a move to take your King out of Check"
-                puts ""
-                undo_move(piece)
-                take_turn(player, game)
+                self.king_still_in_check(player, game)
+                    if @check == true
+                        puts "Sorry, you need to make a move to take your King out of Check"
+                        puts ""
+                        undo_move(piece)
+                        take_turn(player, game)
+                    end
             end
         self.print_board
     end
