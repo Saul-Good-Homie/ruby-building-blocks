@@ -8,9 +8,11 @@ require_relative 'queen.rb'
 require_relative 'pawn.rb'
 require_relative 'empty_piece.rb'
 
+require 'yaml'
 class Chess
     attr_accessor :board, :players
 
+@@total_moves = 1
 
     def initialize
         @players = []
@@ -19,33 +21,87 @@ class Chess
         @checkmate = false
         @start_position = []
         @place_holder_class = nil
-        @end_move = []
+        @place_holder_count = nil
         @remove_check = 0
     end
     
+    def save_game
+        game_data = {
+            players: @players,
+            board: @board,
+            check: @check,
+            checkmate: @checkmate,
+            start_position: @start_position,
+            place_holder_class: @place_holder_class,
+            place_holder_count: @place_holder_count,
+            remove_check: @remove_check,
+            total_moves: @@total_moves
+        }
+
+            Dir.mkdir("saves") unless Dir.exists? "saves"
+    
+            puts "WARNING! If the filename already exist the data on that file will be overwritten!"
+            print "Enter a filename for your save: "
+            filename = gets.chomp
+    
+            File.open("saves/#{filename}.yaml", "w") do |file|
+                file.puts game_data.to_yaml
+            end
+    
+            puts "Your progress has been saved!"
+        end
+    
+        def load_game
+            filename = nil
+            puts Dir.children("saves/")
+            loop do
+                print "Please enter an existing filename (without the '.yaml'): "
+                filename = gets.chomp
+                break if File.exists? "saves/#{filename}.yaml"
+            end
+    
+            # Read data from file
+            game_data = YAML.load_file("saves/#{filename}.yaml")
+    
+        # Load data to current game
+        @players = game_data[:players]
+        @board = game_data[:board]
+        @check = game_data[:check]
+        @checkmate = game_data[:checkmate]
+        @start_position = game_data[:start_position]
+        @place_holder_class = game_data[:place_holder_class]
+        @place_holder_count = game_data[:place_holder_count]
+        @remove_check = game_data[:remove_check]
+        @@total_moves = game_data[:total_moves]
+
+        play_game
+    end
+
+
     def create_players
-        # game_manager = Player.new("Admin", "Neutral")
+        game_manager = Player.new("Admin", "Neutral")
+
         # puts "Hello Friend, let's play a game of Chess"
-        # puts ""
-        # puts "What is your name?"
-        # name = gets.chomp
-        # player_1 = Player.new(name, "Black")
-        # puts "Great! #{player_1.name} will be #{player_1.team}"
-        # puts ""
+        puts "Type '1' for a new game or '2' to load a saved game"
+        if gets.chomp == '2'
+            load_game
+        end
+        puts ""
+        puts "What is your name?"
+        name = gets.chomp
+        player_1 = Player.new(name, "Black")
+        puts "Great! #{player_1.name} will be #{player_1.team}"
+        puts ""
 
-        # puts "Now we need an opponent"
-        # puts ""
-        # puts "Who are you playing?"
-        # second_name = gets.chomp
-        # player_2 = Player.new(second_name, "White" )
-        # puts "#{player_2.name} will be #{player_2.team}."
-        # puts ""
-        # puts "Now lets play!"
-        # puts ""
-
-player_1 = Player.new("Saul", "Black")
-player_2 = Player.new("LJ", "White")
-game_manager = Player.new("Admin", "Neutral")
+        puts "Now we need an opponent"
+        puts ""
+        puts "Who are you playing?"
+        second_name = gets.chomp
+        player_2 = Player.new(second_name, "White" )
+        puts "#{player_2.name} will be #{player_2.team}."
+        puts ""
+        puts "Now lets play!"
+        puts ""
 
             #add players to array
             @players << player_1
@@ -107,7 +163,6 @@ game_manager = Player.new("Admin", "Neutral")
                             update_board(right_bishop, [1,6])
                                 king = King.new(player)
                                     update_board(king, [1,4])
-                                    #update_board(king, [5,6])
                                 queen = Queen.new(player)
                                     update_board(queen, [1,5])
                                 pawn_1 = Pawn.new(player)
@@ -143,8 +198,7 @@ game_manager = Player.new("Admin", "Neutral")
                     right_bishop = Bishop.new(player)
                         update_board(right_bishop, [8,6])
                             king = King.new(player)
-                                #update_board(king, [8,5])
-                                update_board(king, [4,5])
+                                update_board(king, [8,5])
                             queen = Queen.new(player)
                                 update_board(queen, [8,4])
                             pawn_1 = Pawn.new(player)
@@ -167,7 +221,12 @@ game_manager = Player.new("Admin", "Neutral")
 
     def get_input(player)
         puts "#{player.name} choose a piece you want to move by \n typing a row and column like this: B2"
+        puts "Save and quit at any time by typing 'save'."
         piece = gets.chomp
+        if piece == 'save'
+            save_game
+            return
+        end
         square = piece.split(//)
         tile = convert_input_to_array(square)
         x = @board[tile[0]][tile[1]]
@@ -224,6 +283,7 @@ game_manager = Player.new("Admin", "Neutral")
 
     def move_piece(piece, array)
         @place_holder_class = @board[array[0]][array[1]].class
+        @place_holder_count = @board[array[0]][array[1]].move_count
         @start_position = piece.position.clone
             @board[piece.position[0]][piece.position[1]] = Empty_Piece.new(@players[2])
             piece.position = array
@@ -245,14 +305,11 @@ game_manager = Player.new("Admin", "Neutral")
 
         @board[piece.position[0]][piece.position[1]] = x
         x.position = piece.position
+        x.move_count = @place_holder_count
 
         #update piece position
         piece.position = @start_position
         piece.move_count -= 1
-        #need to copy over current move count
-
-        ### start here SAUL ###
-        
     end
 
     def convert_input_to_array(array)
@@ -323,29 +380,32 @@ game_manager = Player.new("Admin", "Neutral")
 
     def king_in_check(player, game)
         king = find_king(player, game)
-        #find all possible moves to reach the king
+        player_pieces = []
         @board.each do |row|
             row.each do |square|
-                next if square.class == String
-                next if square.team == "Neutral"
-                next if square.team == player.team
-                moves = square.possible_moves(player, game)
-                    if moves.include?(king.position)
-                        puts "*****CHECK!*****"
-                        puts ""
-                        puts "#{player.name}, your #{king.display} is in check from #{convert_array_to_input(square.position)}"
-                        @check = true
-                    else 
-                        @check = false
-                    end
-            end    
-        end
+                    next if square.class == String
+                    next if square.team == "Neutral"
+                    next if square.team == player.team
+                    player_pieces << square 
+                end
+            end
+        player_pieces.each do |square|
+            moves = square.possible_moves(player, game)
+                if moves.include?(king.position)
+                    puts "*****CHECK!*****"
+                    puts ""
+                    puts "#{player.name}, your #{king.display} is in check from #{convert_array_to_input(square.position)}"
+                    @check = true
+                    break
+                else 
+                    @check = false
+                end
+            end
     end
 
     def king_still_in_check(player, game)
         king = find_king(player, game)
         player_pieces = []
-        #find all possible moves to reach the king
         @board.each do |row|
             row.each do |square|
                 next if square.class == String
@@ -385,7 +445,6 @@ game_manager = Player.new("Admin", "Neutral")
                             next if @board[move[0]][move[1]].class == String
                             if @board[move[0]][move[1]].team == "Neutral" || @board[move[0]][move[1]].team != player.team
                                 possible_moves << move
-                                #next
                             end
                         end
 
@@ -393,7 +452,6 @@ game_manager = Player.new("Admin", "Neutral")
                     possible_moves.each do |move|
                                         move_piece(piece, move)
                                         king_still_in_check(player, game)
-                                            #puts "Moving #{piece} to #{move}. Is King still in check? #{@check}"
                                             if @check == false
                                             @remove_check += 1
                                             end
@@ -402,11 +460,26 @@ game_manager = Player.new("Admin", "Neutral")
                     
             end
         end
-        puts "There are #{@remove_check} possible moves"
+        #puts "There are #{@remove_check} possible moves"
+        game_over(player)
+        @remove_check = 0
+    end
+
+    def game_over(player)
+        if @remove_check == 0
+            puts "***** CHECK MATE! *****"
+            puts ""
+            puts "Sorry, #{player.name} you are in Check Mate"
+            puts ""
+            puts "Thanks for playing!"
+            @check_mate = true
+        end
     end
 
 
     def take_turn(player, game)
+        puts @@total_moves
+        self.print_board
         self.king_in_check(player, game)
         if @check == true
             self.check_mate(player, game)
@@ -423,16 +496,18 @@ game_manager = Player.new("Admin", "Neutral")
                         take_turn(player, game)
                     end
             end
-        self.print_board
+        @@total_moves += 1
+        #self.print_board
     end
 
     def play_game
-        10.times{
-            self.take_turn(@players[0], self)
-            break if @checkmate == true
-            self.take_turn(@players[1], self)
-            break if @checkmate == true
-        }  
+        while @checkmate == false do
+            if @@total_moves.odd?
+                self.take_turn(@players[0], self)
+            else
+                self.take_turn(@players[1], self)
+            end
+        end
     end
 
 end
